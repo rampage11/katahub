@@ -1,0 +1,39 @@
+name: katahub
+
+services:
+  api:
+    build: .
+    env_file: .env
+    environment:
+      PORT: "8080"
+      DATABASE_URL: "postgres://katahub:katahub@postgres:5432/katahub?sslmode=disable"
+      SESSIONS_DIR: "/data/sessions"
+    volumes:
+      - ../data/sessions:/data/sessions
+    depends_on:
+      postgres:
+        condition: service_healthy
+    expose:
+      - "8080"
+    ports:
+      - "0.0.0.0:8080:8080"
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: katahub
+      POSTGRES_PASSWORD: katahub
+      POSTGRES_DB: katahub
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U katahub"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  pg_data:

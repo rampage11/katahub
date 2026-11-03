@@ -1,0 +1,21 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+
+# secrets / env (keep *.example)
+.env
+.env.*
+!.env.prod.example
+
+# local session data
+backend/data/
+data/
+
+# generated analysis artifacts & heavy media (regeneratable, not source)
+backend/web/videos/
+backend/web/compare/
+backend/web/lap25/
+backend/web/lap31/

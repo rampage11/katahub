@@ -1,0 +1,485 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>katahub · сессия</title>
+<style>
+  :root {
+    --bg: #0a0b0e;
+    --bg-elev: #14161c;
+    --bg-card: #1a1d26;
+    --border: #262a35;
+    --text: #e8eaef;
+    --text-muted: #8b92a5;
+    --accent: #22d3ee;
+    --accent-dim: #0e7490;
+    --green: #22c55e;
+    --red: #ef4444;
+    --orange: #f59e0b;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, system-ui, sans-serif;
+    background: linear-gradient(180deg, #0a0b0e 0%, #0f1116 100%);
+    color: var(--text);
+    margin: 0;
+  }
+  .nav {
+    padding: 16px 32px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background: rgba(10,11,14,0.8);
+    backdrop-filter: blur(12px);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .brand {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #22d3ee 0%, #a78bfa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-decoration: none;
+  }
+  .nav-back {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 14px;
+  }
+  .nav-back:hover { color: var(--text); }
+  .container { max-width: 1600px; margin: 0 auto; padding: 32px; }
+  h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 8px; }
+  h2 { font-size: 15px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; margin: 32px 0 12px; }
+  .meta-row { display: flex; gap: 20px; color: var(--text-muted); font-size: 14px; margin-bottom: 24px; flex-wrap: wrap; }
+  .meta-row b { color: var(--text); font-weight: 600; }
+  .verdict-card {
+    background: linear-gradient(135deg, rgba(34,211,238,0.08), rgba(167,139,250,0.08));
+    border: 1px solid rgba(34,211,238,0.2);
+    border-radius: 12px;
+    padding: 20px 24px;
+    font-size: 15px;
+    line-height: 1.6;
+    margin-bottom: 24px;
+  }
+  .verdict-card .label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+  .compare-controls { display: flex; gap: 12px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+  select, button {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  select:hover, button:hover { border-color: var(--accent-dim); }
+  button.primary { background: var(--accent-dim); border-color: var(--accent); }
+  button.primary:hover { background: var(--accent); color: #000; }
+  .iframe-wrap {
+    background: #F6F5F0;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    min-height: 640px;
+  }
+  iframe { width: 100%; min-height: 640px; border: 0; display: block; }
+  .table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .table th { text-align: left; color: var(--text-muted); font-weight: 500; padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .table td { padding: 10px 12px; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; }
+  .table tr:hover { background: var(--bg-card); cursor: pointer; }
+  .table td.num { text-align: right; }
+  .best-badge { background: linear-gradient(135deg, var(--accent-dim), var(--accent)); color: #000; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 11px; }
+  .lap-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .lap-card-head {
+    padding: 16px 20px;
+    background: linear-gradient(90deg, rgba(34,211,238,0.05), transparent);
+    border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .lap-card-head .title { font-weight: 600; font-size: 14px; }
+  .lap-card-head .meta { font-size: 12px; color: var(--text-muted); }
+  details { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 0; margin-top: 12px; }
+  summary { padding: 12px 16px; cursor: pointer; font-size: 13px; color: var(--text-muted); user-select: none; }
+  summary:hover { color: var(--text); }
+  pre { background: #0b0d12; padding: 16px; border-radius: 8px; overflow-x: auto; font-size: 11px; line-height: 1.5; color: var(--text-muted); margin: 0 16px 16px; }
+</style>
+</head>
+<body>
+<nav class="nav">
+  <a href="/admin/" class="brand">katahub</a>
+  <a href="/admin/" class="nav-back">← назад к сессиям</a>
+</nav>
+<div class="container">
+  <h1 id="title">Сессия</h1>
+  <div class="meta-row" id="meta"></div>
+
+  <div class="verdict-card">
+    <div class="label">AI-разбор</div>
+    <div id="verdict">загружаю…</div>
+  </div>
+
+  <h2>Карт и держак</h2>
+  <div id="gripBlock" class="verdict-card" style="background:linear-gradient(135deg,rgba(239,159,39,0.08),rgba(29,158,117,0.08));border-color:rgba(239,159,39,0.2)">
+    <div class="label">Параметры сессии</div>
+    <div id="gripContent">загружаю…</div>
+  </div>
+
+  <h2>Рекомендации</h2>
+  <div id="recoBlock" class="verdict-card" style="background:linear-gradient(135deg,rgba(239,68,68,0.08),rgba(34,211,238,0.08));border-color:rgba(239,68,68,0.2)">
+    <div id="recoContent">загружаю…</div>
+  </div>
+
+  <h2>Повороты</h2>
+  <div style="overflow-x:auto">
+    <table class="table" id="cornerTable">
+      <thead><tr>
+        <th>#</th><th>vmin, км/ч<br>best / med</th><th>a_lat_pk, g<br>best / med</th>
+        <th>amin, g<br>best / med</th><th>brake, с<br>best / med</th>
+        <th>slip, с<br>best / med</th><th>Δ, с</th>
+      </tr></thead>
+      <tbody><tr><td colspan="7" style="color:var(--text-muted)">—</td></tr></tbody>
+    </table>
+  </div>
+
+  <h2>Сравнение кругов</h2>
+  <div class="compare-controls">
+    <span style="color:var(--text-muted);font-size:13px">Лучший круг vs</span>
+    <select id="otherLap"><option>загружаю…</option></select>
+    <button class="primary" id="btnCompare">Показать</button>
+    <span id="compareStatus" style="color:var(--text-muted);font-size:12px"></span>
+  </div>
+  <div class="iframe-wrap">
+    <iframe id="compareFrame" src="about:blank" allow="fullscreen"></iframe>
+  </div>
+
+  <h2>Статистика по кругам</h2>
+  <div id="sessionMeta" style="color:var(--text-muted);font-size:13px;margin-bottom:12px"></div>
+  <table class="table" id="lapsTable">
+    <thead><tr>
+      <th>#</th><th>время</th><th>Δ лучший</th><th>поз.</th>
+      <th>src</th><th>NCC</th><th>DTW res</th><th></th>
+    </tr></thead>
+    <tbody><tr><td colspan="8" style="color:var(--text-muted)">—</td></tr></tbody>
+  </table>
+
+  <h2>Сектора</h2>
+  <div style="overflow-x:auto">
+    <table class="table" id="sectorsTable">
+      <thead><tr>
+        <th>сектор</th><th>повороты</th><th>best, с</th><th>median, с</th><th>σ, мс</th><th>n</th>
+      </tr></thead>
+      <tbody><tr><td colspan="6" style="color:var(--text-muted)">—</td></tr></tbody>
+    </table>
+  </div>
+
+  <details>
+    <summary>Manifest</summary>
+    <pre id="manifest">—</pre>
+  </details>
+  <details>
+    <summary>Live-feed (debug)</summary>
+    <pre id="live" style="max-height:200px;overflow-y:auto">—</pre>
+  </details>
+</div>
+
+<script>
+const id = new URLSearchParams(location.search).get('id');
+let bestLapNumber = null;
+let analysisData = null;
+let currentCompareKey = null;   // "{best}_{other}" — отслеживает что сейчас показано
+let lastLapCount = 0;           // чтобы автоперезагрузить iframe при появлении нового круга
+
+function compareURL(best, other, bust) {
+  const t = bust ? ('&t=' + Date.now()) : '';
+  return `/sessions/${id}/compare?best=${best}&other=${other}${t}`;
+}
+
+function renderV2Blocks(render) {
+  // "Карт и держак"
+  const grip = render.grip_ratio;
+  const dvr = render.delta_vs_reference;
+  const theta = render.theta_deg;
+  const thetaCorr = render.theta_corr;
+  const pot = render.potential_s;
+  const trend = render.trend_s;
+  const cut = render.phase_cut;
+  const invalid = render.invalid_laps_count;
+  const gripParts = [];
+  if (cut != null) gripParts.push(`порог тормоза <b>${cut.toFixed(2)} g</b>`);
+  if (invalid != null) gripParts.push(`отброшено <b>${invalid}</b> кругов`);
+  if (theta != null) gripParts.push(`θ датчика <b>${theta.toFixed(0)}°</b> (corr ${thetaCorr != null ? thetaCorr.toFixed(2) : '—'})`);
+  if (pot != null) gripParts.push(`потенциал <b>${pot.toFixed(2)} с</b>`);
+  if (trend != null) {
+    const sign = trend > 0 ? '+' : '';
+    gripParts.push(`тренд <b>${sign}${trend.toFixed(2)} с</b> за сессию`);
+  }
+  if (grip != null) {
+    gripParts.push(`держак относительно эталона <b>${grip.toFixed(2)}×</b>`);
+  }
+  if (dvr && dvr.car_share_s != null) {
+    gripParts.push(`оценка доли карта в Δ <b>${dvr.car_share_s.toFixed(2)} с</b>`);
+  }
+  document.getElementById('gripContent').innerHTML =
+    gripParts.length ? gripParts.join(' · ') : '<span style="color:var(--text-muted)">нет данных v2 pipeline</span>';
+
+  // "Рекомендации"
+  const recs = render.recommendations || [];
+  if (recs.length === 0) {
+    document.getElementById('recoContent').innerHTML =
+      '<span style="color:var(--text-muted)">рекомендаций нет: либо сессия чистая, либо недостаточно валидных кругов</span>';
+  } else {
+    const rows = recs.map(r => {
+      const pri = `~${r.priority_s.toFixed(2)}с`;
+      const nums = Object.entries(r.numbers || {})
+        .filter(([k, v]) => v != null)
+        .map(([k, v]) => `${k}=${typeof v === 'number' ? v.toFixed(2) : v}`)
+        .join(', ');
+      return `<div style="margin:8px 0;padding:10px 12px;background:var(--bg-card);border-radius:6px;border-left:3px solid var(--accent)">
+        <div style="font-weight:500;color:var(--text)">${r.text}</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px">${pri} · ${nums}</div>
+      </div>`;
+    });
+    document.getElementById('recoContent').innerHTML = rows.join('');
+  }
+
+  // Corner table
+  const ct = render.corner_table || [];
+  const tb = document.getElementById('cornerTable').querySelector('tbody');
+  if (ct.length === 0) {
+    tb.innerHTML = '<tr><td colspan="7" style="color:var(--text-muted)">—</td></tr>';
+  } else {
+    tb.innerHTML = ct.map(row => {
+      const B = row.best || {};
+      const M = row.median || {};
+      const fmt = (v) => v == null || Number.isNaN(v) ? '—' : (typeof v === 'number' ? v.toFixed(2) : v);
+      const dcol = row.delta_s > 0.05 ? '#ef4444' : (row.delta_s < -0.05 ? '#22c55e' : 'var(--text-muted)');
+      return `<tr>
+        <td><b>${row.name}</b></td>
+        <td class="num">${fmt(B.vmin_kmh)} / ${fmt(M.vmin_kmh)}</td>
+        <td class="num">${fmt(B.alat_pk)} / ${fmt(M.alat_pk)}</td>
+        <td class="num">${fmt(B.amin)} / ${fmt(M.amin)}</td>
+        <td class="num">${fmt(B.brake_len)} / ${fmt(M.brake_len)}</td>
+        <td class="num">${fmt(B.slip)} / ${fmt(M.slip)}</td>
+        <td class="num" style="color:${dcol}">${row.delta_s > 0 ? '+' : ''}${(row.delta_s || 0).toFixed(2)}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  // Sector table
+  const st = render.sector_table || [];
+  const stb = document.getElementById('sectorsTable').querySelector('tbody');
+  if (st.length === 0) {
+    stb.innerHTML = '<tr><td colspan="6" style="color:var(--text-muted)">—</td></tr>';
+  } else {
+    stb.innerHTML = st.map(row => `<tr>
+      <td><b>${row.name}</b></td>
+      <td style="color:var(--text-muted);font-size:12px">${(row.corners || []).join(', ')}</td>
+      <td class="num">${row.best_s.toFixed(3)}</td>
+      <td class="num">${row.median_s.toFixed(3)}</td>
+      <td class="num">${Math.round(row.sigma_s * 1000)}</td>
+      <td class="num">${row.samples}</td>
+    </tr>`).join('');
+  }
+
+  // Session meta line
+  const parts = [];
+  if (render.phase_cut != null) parts.push(`cut <b>${render.phase_cut.toFixed(2)}g</b>`);
+  if (render.invalid_laps_count != null) parts.push(`invalid <b>${render.invalid_laps_count}</b>`);
+  if (render.best_lap && render.best_lap.phase_pct) {
+    const p = render.best_lap.phase_pct;
+    parts.push(`фазы PB: тормоз <b>${p.brake}%</b> · сброс/трейл <b>${p.lift}%</b> · газ <b>${p.accel}%</b> · ровно <b>${p.cruise}%</b>`);
+  }
+  if (render.best_lap && render.best_lap.slip_count != null) {
+    parts.push(`срывов на PB <b>${render.best_lap.slip_count}</b>`);
+  }
+  document.getElementById('sessionMeta').innerHTML = parts.join(' · ');
+}
+
+async function loadSession() {
+  const r = await fetch(`/sessions/${id}`);
+  if (!r.ok) { document.getElementById('title').textContent = 'Сессия не найдена'; return; }
+  const s = await r.json();
+  document.getElementById('title').textContent = s.track || 'Сессия ' + id.slice(0,8);
+  document.getElementById('meta').innerHTML = `
+    <span>карт <b>${s.kart || '—'}</b></span>
+    <span>длительность <b>${s.durationSec ? Math.round(s.durationSec) + ' с' : '—'}</b></span>
+    <span>загружена <b>${new Date(s.uploadedAt).toLocaleString('ru-RU')}</b></span>
+    <span>id <b style="font-family:ui-monospace,Menlo,monospace;font-size:12px">${id.slice(0,8)}</b></span>
+  `;
+  const mf = typeof s.manifest === 'string' ? JSON.parse(s.manifest) : s.manifest;
+  document.getElementById('manifest').textContent = mf ? JSON.stringify(mf, null, 2) : '—';
+}
+
+async function loadAnalysis() {
+  const r = await fetch(`/sessions/${id}/analysis`);
+  if (!r.ok) return;
+  const a = await r.json();
+  analysisData = a;
+
+  if (a.verdict) {
+    document.getElementById('verdict').textContent = a.verdict;
+  } else {
+    document.getElementById('verdict').textContent = 'разбор ещё готовится…';
+  }
+
+  // v2 §11: render содержит phase_cut, invalid_laps_count, recommendations,
+  // grip_ratio, corner_table, sector_table, potential_s, trend_s.
+  const render = (typeof a.render === 'string') ? JSON.parse(a.render) : a.render;
+  renderV2Blocks(render || {});
+
+  if (a.laps && a.laps.length) {
+    const bestMs = Math.min(...a.laps.map(l => l.ms));
+    const bestLap = a.laps.find(l => l.ms === bestMs);
+    bestLapNumber = bestLap.n;
+    const lastLap = a.laps[a.laps.length - 1];
+    const newLapAppeared = a.laps.length > lastLapCount;
+    lastLapCount = a.laps.length;
+
+    // Fill lap selector: ВСЕ круги кроме best
+    const sel = document.getElementById('otherLap');
+    const prevSelected = parseInt(sel.value, 10) || null;
+    const defaultOther = (lastLap && lastLap.n !== bestLapNumber) ? lastLap.n
+      : (a.laps.find(l => l.n !== bestLapNumber) || {}).n;
+    sel.innerHTML = a.laps
+      .filter(l => l.n !== bestLapNumber)
+      .map(l => {
+        const d = l.ms - bestMs;
+        const dLbl = d > 0 ? '+' + (d/1000).toFixed(3) : '0.000';
+        const tag = l.n === lastLap.n ? ' · последний' : '';
+        const chosen = (prevSelected ? l.n === prevSelected : l.n === defaultOther);
+        return `<option value="${l.n}" ${chosen ? 'selected' : ''}>круг ${l.n} · ${(l.ms/1000).toFixed(3)}с (${dLbl})${tag}</option>`;
+      })
+      .join('') || '<option value="">нет кругов для сравнения</option>';
+
+    // Автозагрузка: при первом рендере — best vs last; при появлении нового
+    // круга — переключаемся на него. Пользовательский выбор сохраняется.
+    const activeOther = parseInt(sel.value, 10);
+    if (activeOther) {
+      if (newLapAppeared && lastLap.n !== bestLapNumber) {
+        sel.value = lastLap.n;
+        loadCompare(bestLapNumber, lastLap.n, true);
+      } else if (!currentCompareKey) {
+        loadCompare(bestLapNumber, activeOther, false);
+      }
+    }
+
+    // Fill laps table. v2: источники (timing/imu), NCC и DTW residual
+    // показываются из render.per_lap_times (если доступен) чтобы было видно
+    // почему круг помечен invalid.
+    const perLapByN = {};
+    const plt = (render && render.per_lap_times) || [];
+    plt.forEach(p => { perLapByN[p.number] = p; });
+    document.getElementById('lapsTable').querySelector('tbody').innerHTML = a.laps.map(l => {
+      const d = (l.ms - bestMs) / 1000;
+      const isBest = d < 0.001;
+      const dStr = isBest ? '<span class="best-badge">PB</span>' : `+${d.toFixed(3)}`;
+      const canCompare = !isBest;
+      const extra = perLapByN[l.n] || {};
+      const src = extra.source || l.source || '—';
+      const ncc = extra.ncc != null ? extra.ncc.toFixed(2) : '—';
+      const dtwr = extra.dtw_residual != null ? extra.dtw_residual.toFixed(2) : '—';
+      const invalidStyle = extra.valid === false ? ' style="opacity:0.5"' : '';
+      return `<tr${invalidStyle} ${canCompare ? `data-lap="${l.n}"` : ''}>
+        <td><b>${l.n}</b></td>
+        <td class="num">${(l.ms/1000).toFixed(3)}</td>
+        <td class="num">${dStr}</td>
+        <td class="num">${l.pos || '—'}</td>
+        <td class="num" style="font-size:11px;color:var(--text-muted)">${src}</td>
+        <td class="num" style="font-size:11px">${ncc}</td>
+        <td class="num" style="font-size:11px">${dtwr}</td>
+        <td style="text-align:right">${canCompare ? '→' : ''}</td>
+      </tr>`;
+    }).join('');
+    document.querySelectorAll('#lapsTable tbody tr[data-lap]').forEach(tr => {
+      tr.addEventListener('click', () => {
+        const n = parseInt(tr.dataset.lap, 10);
+        document.getElementById('otherLap').value = n;
+        loadCompare(bestLapNumber, n, false);
+        window.scrollTo({ top: document.querySelector('.iframe-wrap').offsetTop - 80, behavior: 'smooth' });
+      });
+    });
+  }
+}
+
+async function loadCompare(bestN, otherN, bust) {
+  if (!bestN || !otherN) return;
+  currentCompareKey = bestN + '_' + otherN;
+  const frame = document.getElementById('compareFrame');
+  const status = document.getElementById('compareStatus');
+  status.textContent = `круг ${bestN} (лучший) vs круг ${otherN} · загружаю…`;
+  const url = compareURL(bestN, otherN, bust);
+  // HEAD-пробник: ловим 422 (align gate) и 500 без мигания iframe
+  try {
+    const probe = await fetch(url, { method: 'GET', headers: { 'Range': 'bytes=0-0' } });
+    if (probe.status === 422) {
+      frame.src = 'about:blank';
+      status.textContent = `круг ${otherN} не прошёл align gate — compare невозможен`;
+      status.style.color = 'var(--orange)';
+      return;
+    }
+    if (!probe.ok) {
+      frame.src = 'about:blank';
+      status.textContent = `ошибка ${probe.status}: ${(await probe.text()).slice(0,120)}`;
+      status.style.color = 'var(--red)';
+      return;
+    }
+  } catch (e) {
+    status.textContent = `сетевая ошибка: ${e.message}`;
+    status.style.color = 'var(--red)';
+    return;
+  }
+  status.style.color = '';
+  frame.src = url;
+  frame.onload = () => {
+    status.textContent = `круг ${bestN} (лучший) vs круг ${otherN}`;
+  };
+}
+
+document.getElementById('btnCompare').onclick = () => {
+  const n = parseInt(document.getElementById('otherLap').value, 10);
+  if (n && bestLapNumber) loadCompare(bestLapNumber, n, true);
+};
+
+// Live SSE для debug feed
+const es = new EventSource(`/live/${id}/subscribe`);
+const liveEl = document.getElementById('live');
+let liveLines = [];
+es.onmessage = (e) => {
+  try {
+    const ev = JSON.parse(e.data);
+    const t = new Date(ev.wallNs/1e6).toLocaleTimeString('ru-RU') || '?';
+    liveLines.unshift(`${t}  ${ev.kind}  ${JSON.stringify(ev.payload).slice(0, 120)}`);
+    if (liveLines.length > 30) liveLines = liveLines.slice(0, 30);
+    liveEl.textContent = liveLines.join('\n');
+    if (ev.kind === 'render.done' || ev.kind === 'analysis.done') {
+      loadAnalysis();
+    }
+    if (ev.kind === 'compare.done' && ev.payload) {
+      // Если текущий compare соответствует событию — перезагружаем iframe
+      // с cache-bust. Если ещё ничего не выбрано — показываем новое.
+      const key = ev.payload.best + '_' + ev.payload.other;
+      if (currentCompareKey == null || currentCompareKey === key) {
+        loadCompare(ev.payload.best, ev.payload.other, true);
+      }
+    }
+  } catch (err) {}
+};
+es.onerror = () => {};
+
+loadSession();
+loadAnalysis();
+setInterval(loadAnalysis, 10000);
+</script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+# Production overlay for katahub backend on the Yandex Cloud VM.
+#
+# Composed with the dev file:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# - No host port binding (shared nginx on `kart-technic_default` network
+#   reaches us via DNS name `katahub-api`).
+# - Absolute paths on the VPS for the sessions volume.
+# - `name: katahub` prevents collision with GuessWhat (which deploys from
+#   `/opt/guesswhat/backend/` — default project name would be `backend`
+#   for both, sharing containers and volumes).
+
+name: katahub
+
+services:
+  api:
+    container_name: katahub-api
+    image: katahub-api:local
+    restart: unless-stopped
+    # !reset [] drops the host port binding inherited from docker-compose.yml.
+    # Plain `ports: []` is a list-merge that leaves the dev binding in place
+    # — only !reset actually clears it in Compose Spec v2.
+    ports: !reset []
+    expose:
+      - "8080"
+    networks:
+      default: {}
+      shared_nginx: {}
+    volumes:
+      - /opt/katahub/data/sessions:/data/sessions
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+
+networks:
+  default:
+    driver: bridge
+  shared_nginx:
+    external: true
+    name: kart-technic_default
